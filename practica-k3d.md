@@ -71,7 +71,7 @@ cat <<EOF | kubectl apply -f -
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: apache-ingress
+  name: main-ingress
 spec:
   rules:
   - http:
@@ -96,9 +96,9 @@ Vamos a armar una aplicacion con un boton de autodestruccion, para entender como
 from flask import Flask
 import os
 app = Flask(__name__)
-@app.route('/')
+@app.route('/app')
 def hello_world(): return 'Hola Mundo! Soy la App de Python'
-@app.route('/romper')
+@app.route('/app/romper')
 def romper(): os._exit(1)
 if __name__ == '__main__': app.run(host='0.0.0.0', port=5000)
 ```
@@ -110,6 +110,32 @@ k3d image import webappvolatil:v1 -c ahk-cluster
 # Desplegamos nuevamente
 kubectl create deployment segundodeploy --image=webappvolatil:v1
 kubectl expose deployment segundodeploy --port=5000 --name=segundodeployservice
+
+# Actualizamos el Ingress para que convivan Apache y Python
+cat <<EOF | kubectl apply -f -
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: main-ingress
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: primerdeploy
+            port:
+              number: 80
+      - path: /app
+        pathType: Prefix
+        backend:
+          service:
+            name: segundodeployservice
+            port:
+              number: 5000
+EOF
 ```
 
 ## Etapa 4: Escalado y Resiliencia
@@ -117,7 +143,7 @@ kubectl expose deployment segundodeploy --port=5000 --name=segundodeployservice
 kubectl scale deployment/segundodeploy --replicas 3
 watch kubectl get pods
 ```
-**Ejercicio**: Abre otra terminal y corre `curl http://localhost:8080/romper`. Observa cómo el pod muere y K8s crea uno nuevo para mantener las 3 réplicas que pediste.
+**Ejercicio**: Abre otra terminal y corre `curl http://localhost:8080/app/romper`. Observa cómo el pod muere y K8s crea uno nuevo para mantener las 3 réplicas que pediste.
 
 ## Etapa 5: Rollouts (Actualizaciones)
 
@@ -137,9 +163,9 @@ kubectl rollout status deployment/segundodeploy
 ```
 
 ## Etapa 7: Persistencia (PV/PVC)
-Para que K8s use tu carpeta del host, debemos usar `storageClassName: manual`.
+Hasta ahora, si un pod muere, todos sus archivos se pierden. Para que K8s use tu carpeta del host de forma permanente y los datos sobrevivan, debemos usar Volúmenes Persistentes. Usaremos `storageClassName: manual`.
 
-**volumen.yml**
+**volumen.yml** (Define el volumen en el disco)
 ```yaml
 apiVersion: v1
 kind: PersistentVolume
@@ -156,7 +182,7 @@ spec:
     type: Directory
 ```
 
-**persistencia.yml**
+**persistencia.yml** (Pide un pedazo de ese volumen para nuestra app)
 ```yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -168,6 +194,88 @@ spec:
   resources:
     requests: {storage: 1Gi}
 ```
+
+```bash
+kubectl apply -f volumen.yml
+kubectl apply -f persistencia.yml
+```
+
+### Ejercicio Práctico: Conectando el Volumen a la App Python
+Vamos a modificar nuestra App para que guarde un log de visitas en este volumen. Así, podrás ver los archivos modificados en vivo desde tu PC.
+
+1. **Modifica `server.py`**:
+```python
+from flask import Flask
+import os
+import datetime
+
+app = Flask(__name__)
+
+@app.route('/app')
+def hello_world(): 
+    # Escribimos un log en el volumen persistente
+    try:
+        with open('/data/visitas.txt', 'a') as f:
+            f.write(f"Visita a las {datetime.datetime.now()}\n")
+    except Exception as e:
+        print("Error escribiendo en volumen", e)
+    return 'Hola Mundo! Visita registrada en el volumen.'
+
+@app.route('/app/romper')
+def romper(): os._exit(1)
+
+if __name__ == '__main__': app.run(host='0.0.0.0', port=5000)
+```
+
+2. **Crea la nueva versión de la imagen**:
+```bash
+docker build -t webappvolatil:v3 .
+k3d image import webappvolatil:v3 -c ahk-cluster
+```
+
+3. **Actualiza el Deployment** para montar el volumen y usar la `v3` (`deployment-vol.yml`):
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: segundodeploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: segundodeploy
+  template:
+    metadata:
+      labels:
+        app: segundodeploy
+    spec:
+      containers:
+      - name: python-app
+        image: webappvolatil:v3
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - name: datos-persistentes
+          mountPath: /data
+      volumes:
+      - name: datos-persistentes
+        persistentVolumeClaim:
+          claimName: mivol-con
+```
+
+```bash
+kubectl apply -f deployment-vol.yml
+```
+
+### Verificando la Persistencia
+1. Ingresa a `http://localhost:8080/app` un par de veces para generar visitas.
+2. **¡Mira tu PC local!** Abre el archivo en tu máquina:
+   ```bash
+   cat $HOME/datos-k8s/visitas.txt
+   ```
+   *Deberías ver las fechas de las visitas escritas por el Pod.*
+3. **Mata el pod** (`curl http://localhost:8080/app/romper` o con `kubectl delete pod...`) y espera que K8s levante uno nuevo.
+4. Genera más visitas y vuelve a revisar el archivo en tu PC. ¡El historial anterior no se perdió!
 
 ## Comandos de Verificación 
 - `kubectl logs -f deployment/segundodeploy` (Ver qué pasa dentro)
