@@ -6,8 +6,8 @@ Esta guía te llevará a través de los conceptos fundamentales de Kubernetes (K
 En esta práctica pasaremos por el ciclo de vida completo de una aplicación en K8s:
 1.  **Arquitectura de Cluster**: Cómo se comunican tu PC y el cluster.
 2.  **Inmutabilidad**: Por qué las imágenes se construyen y se "importan" (no se editan en caliente).
-3.  **Ingress (El Portero)**: Aprenderás que en K8s moderno no accedemos directamente a los pods, sino que usamos un "Ingress Controller" (Traefik) que gestiona el tráfico de entrada.
-4.  **Resiliencia y Escalado**: Verás cómo K8s revive aplicaciones muertas automáticamente.
+3.  **Ingress**: En K8s no es una buena práctica acceder directamente a los pods, sino que usamos un "Ingress Controller" que gestiona el tráfico de entrada.
+4.  **Resiliencia y Escalado**: Revivir aplicaciones muertas automáticamente.
 5.  **Persistencia**: Cómo lograr que los datos sobrevivan aunque el pod sea destruido.
 
 ### Diagrama de Flujo de Red
@@ -38,6 +38,7 @@ sudo mv ./kubectl /usr/local/bin/kubectl
 
 ## Etapa 1: Levantar el cluster
 Creamos el cluster mapeando el puerto 80 del LoadBalancer interno al 8080 de tu PC.
+
 ```bash
 mkdir -p $HOME/datos-k8s
 k3d cluster delete ahk-cluster || true
@@ -57,9 +58,11 @@ RUN echo "Hola desde Apache en K8s!" > /usr/local/apache2/htdocs/index.html
 ```
 
 ```bash
+# Creamos la imagen de apache a probar
 docker build -t unaapache:v1 .
 k3d image import unaapache:v1 -c ahk-cluster
 
+# Desplegamos la imagen y creamos el pod / contenedor
 kubectl create deployment primerdeploy --image=unaapache:v1
 kubectl expose deployment primerdeploy --port=80
 
@@ -85,6 +88,9 @@ EOF
 **Prueba**: `curl http://localhost:8080`
 
 ## Etapa 3: Confiabilidad (App Python)
+
+Vamos a armar una aplicacion con un boton de autodestruccion, para entender como con K8s nos podemos recuperar de las fallas.
+
 **server.py**
 ```python
 from flask import Flask
@@ -98,8 +104,10 @@ if __name__ == '__main__': app.run(host='0.0.0.0', port=5000)
 ```
 
 ```bash
+# Creamos la imagen
 docker build -t webappvolatil:v1 .
 k3d image import webappvolatil:v1 -c ahk-cluster
+# Desplegamos nuevamente
 kubectl create deployment segundodeploy --image=webappvolatil:v1
 kubectl expose deployment segundodeploy --port=5000 --name=segundodeployservice
 ```
@@ -112,10 +120,18 @@ watch kubectl get pods
 **Ejercicio**: Abre otra terminal y corre `curl http://localhost:8080/romper`. Observa cómo el pod muere y K8s crea uno nuevo para mantener las 3 réplicas que pediste.
 
 ## Etapa 5: Rollouts (Actualizaciones)
+
+A medida que se avanza en el desarrollo, vamos a querer cambiar las versiones de nuestra app. 
+Vamos a ver una forma de hacerlo fácilmente usando k8s.
+
 ```bash
-# Cambia algo en server.py...
+# Cambia algo en server.py... por ejemplo texo
+
+# Volvemos a armar la imagen
 docker build -t webappvolatil:v2 .
 k3d image import webappvolatil:v2 -c ahk-cluster
+
+# Realizamos el rollout
 kubectl set image deployment/segundodeploy webappvolatil=webappvolatil:v2
 kubectl rollout status deployment/segundodeploy
 ```
@@ -140,7 +156,7 @@ spec:
     type: Directory
 ```
 
-**volcon.yml**
+**persistencia.yml**
 ```yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -153,13 +169,8 @@ spec:
     requests: {storage: 1Gi}
 ```
 
-## Comandos de Verificación (Cheat Sheet)
+## Comandos de Verificación 
 - `kubectl logs -f deployment/segundodeploy` (Ver qué pasa dentro)
 - `kubectl describe pod [NOMBRE]` (Si el pod no levanta, aquí dice por qué)
 - `kubectl get events --sort-by='.lastTimestamp'` (Historial de errores)
 
-## Preguntas de Reflexión
-1. ¿Por qué usamos `k3d image import` en lugar de que K8s baje la imagen solo?
-2. Si un pod se rompe, ¿K8s lo "arregla" o lo "reemplaza"?
-3. ¿Para qué sirve el Ingress si ya tenemos un Service?
-4. ¿Qué pasa con los archivos en `/data` si borramos el cluster entero?
