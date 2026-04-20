@@ -103,6 +103,14 @@ def romper(): os._exit(1)
 if __name__ == '__main__': app.run(host='0.0.0.0', port=5000)
 ```
 
+**Dockerfile**
+```dockerfile
+FROM python:3.9-slim
+RUN pip install flask
+COPY server.py .
+CMD ["python", "server.py"]
+```
+
 ```bash
 # Creamos la imagen
 docker build -t webappvolatil:v1 .
@@ -137,6 +145,8 @@ spec:
               number: 5000
 EOF
 ```
+**Prueba**: `curl http://localhost:8080/app`
+
 
 ## Etapa 4: Escalado y Resiliencia
 ```bash
