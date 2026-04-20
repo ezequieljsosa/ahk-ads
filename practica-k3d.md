@@ -5,7 +5,7 @@ Esta guía te llevará a través de los conceptos fundamentales de Kubernetes (K
 ### ¿Qué vamos a aprender?
 En esta práctica pasaremos por el ciclo de vida completo de una aplicación en K8s:
 1.  **Arquitectura de Cluster**: Cómo se comunican tu PC y el cluster.
-2.  **Inmutabilidad**: Por qué las imágenes se construyen y se "importan" (no se editan en caliente).
+2.  **Inmutabilidad**: Por qué las imágenes se construyen y se "importan" (no se editan en tiempo de ejecución).
 3.  **Ingress**: En K8s no es una buena práctica acceder directamente a los pods, sino que usamos un "Ingress Controller" que gestiona el tráfico de entrada.
 4.  **Resiliencia y Escalado**: Revivir aplicaciones muertas automáticamente.
 5.  **Persistencia**: Cómo lograr que los datos sobrevivan aunque el pod sea destruido.
