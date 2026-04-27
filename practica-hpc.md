@@ -27,8 +27,6 @@ networks:
 
 > **Nota para usuarios de Linux:** Los archivos en la carpeta `results/` serán creados por el usuario `root` dentro del contenedor. Si tienes problemas para editarlos o borrarlos desde tu máquina, puedes ejecutar `sudo chown -R $USER:$USER results/` al finalizar la práctica.
 
-**Pregunta de feedback:** ¿Cuál es la principal diferencia visual entre el log de un contenedor de Nginx y el de este cluster Slurm al iniciar?
-
 ---
 
 ## Mapa del Cluster (Arquitectura)
@@ -46,7 +44,6 @@ HPC se basa en conocer tus recursos para no desperdiciarlos.
 docker exec -it slurm-cluster sinfo
 docker exec -it slurm-cluster scontrol show nodes
 ```
-**Pregunta de feedback:** Si tuvieras un dataset de 100GB, ¿cómo influiría el número de CPUs y memoria que ves en `sinfo` al decidir cuántas tareas lanzar en paralelo?
 
 ---
 
@@ -62,8 +59,6 @@ docker exec -it slurm-cluster srun -n 4 hostname
 
 ## Paso 4: Data Science real con Job Arrays
 En lugar de un script vacío, simularemos una **Búsqueda de Hiperparámetros**. Entrenaremos 3 modelos en paralelo con diferentes tasas de aprendizaje (*learning rates*).
-
-> **Nota técnica:** Usaremos `.format()` en lugar de *f-strings* (f"...") para asegurar compatibilidad con la versión de Python 3.5 instalada en este cluster simulado.
 
 ### Archivo: `train_model.py`
 ```python
@@ -128,21 +123,6 @@ En HPC no usamos Docker directamente porque requiere privilegios de `root`. **Ap
 ```bash
 docker exec -it slurm-cluster srun --version
 ```
-**Pregunta de feedback:** ¿Qué ventaja tiene un archivo único `.sif` frente a las múltiples capas de Docker cuando hablamos de mover petabytes de datos en un supercomputador?
-
----
-
-## El Ciclo Híbrido: De Entrenamiento (HPC) a Producción (K8s)
-
-Para finalizar, observa cómo conectamos todo el curso:
-
-1.  **Etapa HPC:** Usamos Slurm para entrenar variantes de un modelo en paralelo.
-2.  **Selección:** Elegimos el resultado con mejor **Accuracy** de la carpeta `results/`.
-3.  **Etapa K8s:** La API de Flask (Etapa 3) toma ese modelo y lo sirve a los usuarios finales.
-
-### Reflexión Final:
-*   ¿Por qué no sería eficiente entrenar este modelo directamente dentro de un Pod de Kubernetes?
-*   ¿Cómo ha cambiado tu visión sobre el uso de contenedores después de pasar de una simple API en Docker a un cluster de alto rendimiento?
 
 ---
 
