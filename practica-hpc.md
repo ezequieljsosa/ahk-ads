@@ -104,8 +104,8 @@ docker exec -it slurm-cluster sbatch /job_ds.sh
 Como usamos un volumen compartido, ahora puedes ver los resultados **desde tu propia terminal** (fuera de Docker):
 
 ```bash
-ls -l hpc-lab/results/
-cat hpc-lab/results/*.log
+ls -l results/
+cat results/*.log
 ```
 **Pregunta de feedback:** Observa los nombres de los archivos. ¿Por qué es importante usar `%A` (Job ID) y `%a` (Array Index) en HPC?
 
