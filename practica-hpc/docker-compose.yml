@@ -1,0 +1,12 @@
+version: "3.8"
+services:
+  slurm:
+    image: xenonmiddleware/slurm:latest
+    container_name: slurm-cluster
+    volumes:
+      - ./results:/home/xenon/results  # Carpeta compartida (Simula NFS)
+    networks:
+      - slurm_network
+networks:
+  slurm_network:
+    driver: bridge
