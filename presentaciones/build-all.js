@@ -20,13 +20,13 @@ renderer.code = function({ text, lang }) {
 
 marked.use({ renderer });
 
-// 1. Wipe dist directory before building
+// 1. Wipe dist directory before building to eliminate any stale/duplicate builds
 if (fs.existsSync(distDir)) {
   fs.rmSync(distDir, { recursive: true, force: true });
 }
 fs.mkdirSync(distDir, { recursive: true });
 
-// 2. Find all presentation directories
+// 2. Find all presentation directories (subdirectories containing <dirname>.md)
 const items = fs.readdirSync(presentacionesDir);
 const presentations = [];
 
@@ -42,18 +42,20 @@ for (const item of items) {
 
 console.log(`Found ${presentations.length} presentation(s) to build:`, presentations.map(p => p.dir));
 
-// 3. Build each presentation to dist/<dirname>
+// 3. Build each presentation to dist/<dirname> with relative base
 for (const p of presentations) {
   console.log(`\n📦 Building presentation: ${p.dir}...`);
   const outPath = path.join(distDir, p.dir);
-  execSync(`npx --no-install slidev build ${p.md} --out "${outPath}" --base ./`, { stdio: 'inherit', cwd: presentacionesDir });
+  execSync(`npx slidev build ${p.md} --out "${outPath}" --base ./`, { stdio: 'inherit', cwd: presentacionesDir });
   
+  // Ensure 404.html fallback exists in each presentation folder
   const indexPath = path.join(outPath, 'index.html');
   const presentation404Path = path.join(outPath, '404.html');
   if (fs.existsSync(indexPath)) {
     fs.copyFileSync(indexPath, presentation404Path);
   }
 
+  // Copy public assets into subfolder dist to guarantee favicon resolution
   if (fs.existsSync(publicDir)) {
     for (const file of fs.readdirSync(publicDir)) {
       fs.copyFileSync(path.join(publicDir, file), path.join(outPath, file));
@@ -101,52 +103,44 @@ function renderPracticaHTML(title, contentMarkdown) {
       --accent: #38bdf8;
     }
     body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
       margin: 0;
       padding: 0;
-      font-family: 'Inter', sans-serif;
-      background: radial-gradient(circle at 10% 20%, #0f172a 0%, #05070f 100%);
-      color: var(--text);
-      line-height: 1.6;
     }
     header {
-      border-bottom: 1px solid var(--card-border);
       background: rgba(15, 23, 42, 0.8);
       backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
       position: sticky;
       top: 0;
       z-index: 50;
       padding: 1rem 2rem;
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
     }
     header a {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.9rem;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    header a:hover {
       color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: opacity 0.2s;
     }
+    header a:hover { opacity: 0.8; }
     .container {
       max-width: 900px;
-      margin: 2rem auto;
+      margin: 2.5rem auto;
       padding: 2.5rem;
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      border-radius: 1rem;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
-    }
-    h1, h2, h3, h4 {
-      font-family: 'Outfit', sans-serif;
-      color: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
     }
     h1 {
+      font-family: 'Outfit', sans-serif;
       font-size: 2.2rem;
       background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
       -webkit-background-clip: text;
