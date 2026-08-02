@@ -46,7 +46,7 @@ console.log(`Found ${presentations.length} presentation(s) to build:`, presentat
 for (const p of presentations) {
   console.log(`\n📦 Building presentation: ${p.dir}...`);
   const outPath = path.join(distDir, p.dir);
-  execSync(`npx slidev build ${p.md} --out "${outPath}" --base ./`, { stdio: 'inherit', cwd: presentacionesDir });
+  execSync(`npx --no-install slidev build ${p.md} --out "${outPath}" --base ./`, { stdio: 'inherit', cwd: presentacionesDir });
   
   const indexPath = path.join(outPath, 'index.html');
   const presentation404Path = path.join(outPath, '404.html');
