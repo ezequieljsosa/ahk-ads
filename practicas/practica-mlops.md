@@ -168,9 +168,18 @@ git commit -m "feat: Ingesta y versionado inicial de dataset churn v1.0"
 dvc push
 ```
 
-### ❓ Preguntas de Chequeo — Etapa 1
-- **P1:** Abre el archivo `data/churn.csv.dvc` con `cat`. ¿Qué información contiene este archivo y por qué es seguro guardarlo en Git?
-- **P2:** Si un compañero borra accidentalmente `data/churn.csv` de su máquina, ¿con qué comando de DVC puede recuperarlo desde el remoto?
+### ❓ Preguntas de Cierre — Etapa 1
+
+- **P1:** Agregás 500 filas nuevas al dataset y corrés `dvc add`, `git commit` y `dvc push`. Un compañero hace `git pull`, entrena, y obtiene **métricas distintas a las tuyas**. ¿Qué versión del dataset usó y qué comando le faltó ejecutar?
+- **P2:** En esta práctica el remoto DVC es una carpeta en `$HOME`. Si trabajaran 5 personas desde máquinas distintas, ¿qué habría que cambiar? ¿Por qué el archivo `.dvc` versionado en Git seguiría funcionando exactamente igual?
+
+<details>
+<summary>Ver respuestas orientativas</summary>
+
+- **P1:** Usó el dataset **viejo**, el que ya tenía en su disco. `git pull` le trajo el `.dvc` actualizado (el puntero con el hash nuevo), pero **no** el archivo real — ese vive en el remoto DVC, que es un canal de sincronización totalmente separado de Git. Le faltó `dvc pull`. Esta es la idea central de la etapa: **Git y DVC son dos flujos independientes**, y hay que sincronizar los dos.
+- **P2:** Habría que reemplazar el remoto local por uno accesible en red: S3, MinIO, Google Cloud Storage, Azure Blob o incluso SSH — se cambia con `dvc remote add`, y queda registrado en `.dvc/config`. Lo importante es que el `.dvc` **no cambia**: guarda el *hash del contenido*, no la ubicación física. Por eso el mismo puntero sirve sin importar dónde esté guardado el archivo — exactamente el mismo principio por el que un `docker pull` funciona igual contra Docker Hub o contra un registry privado.
+
+</details>
 
 ---
 
@@ -266,9 +275,18 @@ python train.py
 > 2. Haz clic en el experimento `Telco-Churn-Prediction` para ver las métricas del Run.
 > 3. Entra al menú **Models** arriba a la izquierda y verás el modelo registrado `ChurnModel` en versión 1.
 
-### ❓ Preguntas de Chequeo — Etapa 2
-- **P1:** ¿Qué problema evitás al registrar en MLflow el `Pipeline` completo (transformaciones + modelo) en lugar de registrar únicamente el objeto `RandomForestClassifier` entrenado? Pensalo en términos de qué datos recibe `app.py` en el endpoint `/predict`.
-- **P2:** Si cambias `n_estimators=200` y vuelves a correr `python train.py`, ¿qué ocurre en la interfaz de MLflow con los Runs y en el Model Registry con las versiones?
+### ❓ Preguntas de Cierre — Etapa 2
+
+- **P1:** Dentro de 6 meses te piden **reproducir exactamente** el modelo `ChurnModel/1`. Mirá qué está logueando `train.py` hoy: ¿te alcanzaría? ¿Qué información crítica falta registrar?
+- **P2:** ¿Qué problema evitás al registrar el `Pipeline` completo (transformaciones + modelo) en lugar de sólo el `RandomForestClassifier` entrenado? Pensalo en términos de qué datos recibe `app.py` en el endpoint `/predict`.
+
+<details>
+<summary>Ver respuestas orientativas</summary>
+
+- **P1:** **No alcanzaría.** Hoy `train.py` loguea los hiperparámetros (`n_estimators`, `max_depth`) y las métricas (`accuracy`, `f1_score`), pero no deja rastro de las otras dos patas de la reproducibilidad: **qué versión del código** generó el modelo (el commit de Git) y **qué versión de los datos** se usó (el hash del `.dvc` de la Etapa 1). Sin eso podés saber *qué resultado* diste, pero no podés volver a producirlo. Se resolvería agregando algo como `mlflow.log_param("git_commit", ...)` y `mlflow.log_artifact("data/churn.csv.dvc")`. Ésta es la razón por la que MLOps insiste en versionar **código + datos + modelo** juntos: las tres cosas o ninguna.
+- **P2:** Evitás el **training-serving skew**. Si registraras sólo el clasificador, el preprocesamiento (`StandardScaler` + `OneHotEncoder`) habría que reimplementarlo a mano dentro de `app.py`, y cualquier diferencia mínima (orden de columnas, una categoría nueva, otro criterio de escalado) haría que el modelo reciba en producción datos procesados distinto que en entrenamiento — y falle **en silencio**, sin lanzar ningún error, simplemente prediciendo mal. Al empaquetar todo en el `Pipeline`, la API puede recibir el JSON crudo del negocio (`"Contract": "Month-to-month"`) y las transformaciones se aplican solas, garantizadamente iguales a las del entrenamiento.
+
+</details>
 
 ---
 
@@ -417,9 +435,18 @@ curl -X 'POST' \
 }
 ```
 
-### ❓ Preguntas de Chequeo — Etapa 3
-- **P1:** ¿Por qué en la invocación de Docker utilizamos `--add-host=host.docker.internal:host-gateway`?
-- **P2:** Si realizamos una petición `GET http://localhost:8000/health` y devuelve `model_loaded: false`, ¿cuál es el primer lugar donde deberías revisar logs?
+### ❓ Preguntas de Cierre — Etapa 3
+
+- **P1:** `app.py` carga el modelo con `models:/ChurnModel/1`, una **versión fija**. Si entrenás una versión 2 mejor, ¿qué habría que hacer para que la API la empiece a usar? ¿Qué riesgo tendría apuntar directamente al stage `Production` en lugar de a un número fijo?
+- **P2:** Hacés `GET /health` y devuelve `model_loaded: false`. Enumerá **tres** causas posibles, ordenadas de más a menos probable.
+
+<details>
+<summary>Ver respuestas orientativas</summary>
+
+- **P1:** Con una versión fija hay que **cambiar el código (o la variable de entorno `MODEL_URI`) y redesplegar** el contenedor — es explícito y predecible, pero lento. Apuntar a `models:/ChurnModel/Production` haría que la API tome automáticamente el modelo que esté promovido a ese stage en el Registry, sin tocar código; el riesgo es que **cualquiera que promueva un modelo en MLflow cambia producción al instante**, sin revisión, sin PR y sin posibilidad de rollback controlado. En un entorno serio ese cambio no se hace de golpe sino con las estrategias que vimos en teoría: *shadow testing* primero (el modelo nuevo recibe tráfico real pero su respuesta no se devuelve a nadie) y después *canary* (un 5% del tráfico real), monitoreando antes de escalar al 100%.
+- **P2:** En orden de probabilidad: **(1)** la API no llega al servidor MLflow — mal `MLFLOW_TRACKING_URI`, contenedor sin `host.docker.internal`, o MLflow caído; **(2)** el modelo `ChurnModel` versión 1 no existe todavía en el Registry, porque `train.py` nunca se corrió exitosamente; **(3)** MLflow responde pero no puede entregar el artefacto binario (falta `--serve-artifacts`, o el volumen de artefactos no es accesible desde el contenedor de la API). El primer lugar donde mirar siempre es `docker logs churn_api_service`, porque `app.py` imprime el error exacto al fallar la carga.
+
+</details>
 
 ---
 
@@ -430,7 +457,18 @@ curl -X 'POST' \
 - **Proceso:** Evaluación estadística de la divergencia de distribuciones (KS-Test / Wasserstein Distance) sobre las características numéricas principales.
 - **Salida (Output):** Reporte visual interactivo generado en archivo HTML (`drift_report.html`).
 
-Los datos en producción tienden a cambiar respecto a los datos con los que el modelo fue entrenado. Compararemos un lote de datos "actual" simulado con inflación/cambios de comportamiento contra el conjunto de referencia.
+Un modelo entrenado es una **foto de una relación estadística** tomada en un momento del tiempo. Cuando el mundo real se mueve y esa foto queda vieja, el modelo empieza a fallar **sin que nadie haya tocado una línea de código**. A eso lo llamamos **drift**, y es la razón por la que el ciclo de vida de ML es circular (entrenar → desplegar → monitorear → re-entrenar) y no lineal como un deploy de software tradicional.
+
+En un sistema productivo real, los "datos actuales" saldrían de los logs de predicciones de la API que construimos en la Etapa 3. Como en este laboratorio todavía no acumulamos tráfico real, vamos a **simular** ese lote de producción deformando a propósito dos columnas del dataset original:
+
+| Columna | Qué le hacemos | Qué situación del mundo real simula |
+| :--- | :--- | :--- |
+| `MonthlyCharges` | La multiplicamos por **1.8** (+80%) | Un aumento de tarifas o un salto inflacionario |
+| `tenure` | La multiplicamos por **0.3** (-70%) | Una ola de clientes nuevos (campaña de captación) |
+| `SeniorCitizen` | **No la tocamos** | Grupo de control del experimento |
+
+> [!IMPORTANT]
+> **Prestá atención a `SeniorCitizen`**: la dejamos intacta a propósito. Es el **control** del experimento — si Evidently marcara drift en una columna que no modificamos, significaría que el análisis no es confiable. Al terminar deberías ver drift en las dos columnas alteradas y **cero** en esta.
 
 Crea el archivo `monitor_drift.py`:
 
@@ -475,67 +513,61 @@ python monitor_drift.py
 > ```
 > Y luego ingresa desde tu navegador a `http://localhost:8080/drift_report.html`.
 
-### ❓ Preguntas de Chequeo — Etapa 4
-- **P1:** ¿Cuál es la diferencia entre **Data Drift** (variación en las entradas X) y **Concept Drift** (variación en la relación X → Y)?
-- **P2:** En un entorno productivo automatizado, ¿qué acción debería desencadenar una alerta positiva de Data Drift?
+#### 📊 Resultado esperado
+
+Al abrir el reporte deberías encontrar, en la tabla **Data Drift Summary**, exactamente este patrón:
+
+| Columna | ¿La alteramos? | Test estadístico | Drift Score | ¿Drift? |
+| :--- | :--- | :--- | :--- | :--- |
+| `MonthlyCharges` | Sí (×1.8) | Wasserstein distance (normed) | ~1.72 | 🔴 Sí |
+| `tenure` | Sí (×0.3) | Wasserstein distance (normed) | ~0.92 | 🔴 Sí |
+| `SeniorCitizen` | **No** | Jensen-Shannon distance | **0.0** | 🟢 No |
+
+Y arriba de todo, el veredicto global del dataset:
+
+> **Dataset Drift is detected.** Drift is detected for 66.667% of columns (2 out of 3). Dataset drift detection threshold is 0.5
+
+Es decir: como **2 de 3 columnas** (66.7%) superaron su umbral individual, y eso es más que el umbral de dataset (50%), Evidently declara que **el dataset completo está en drift**. En un pipeline automatizado, esta es exactamente la señal booleana que dispararía el re-entrenamiento (CT).
+
+> [!NOTE]
+> El `0.0` clavado de `SeniorCitizen` no es casualidad ni redondeo: como esa columna es **idéntica** en ambos datasets, la distancia estadística entre sus distribuciones es exactamente cero. Es la prueba de que Evidently está midiendo de verdad y no marcando drift por defecto.
+> Los valores exactos de score pueden variar levemente según la versión de `evidently` que instale `pip`, pero la columna **¿Drift?** debe darte igual.
+
+### ❓ Preguntas de Cierre — Etapa 4
+
+- **P1:** ¿Por qué `SeniorCitizen` da un drift score de exactamente `0.0` mientras las otras dos columnas disparan alerta? ¿Qué te diría el reporte si esta columna también marcara drift?
+- **P2:** En este laboratorio el drift lo fabricamos con una multiplicación. En un sistema real nadie multiplica los datos: **¿qué podría pasar en el mundo** para que `MonthlyCharges` y `tenure` se desplacen así? Dá una causa plausible para cada una.
+- **P3:** Supongamos que los clientes empiezan a cancelar por una razón completamente nueva (un competidor lanza una promoción agresiva), pero las columnas de entrada se ven **estadísticamente idénticas** a las de entrenamiento. ¿Este script lo detectaría? ¿Qué habría que medir para darse cuenta?
+
+<details>
+<summary>Ver respuestas orientativas</summary>
+
+- **P1:** Porque `monitor_drift.py` **no la modificó**: `prod_df` arranca como una copia exacta de `ref_df` y sólo se alteran `MonthlyCharges` y `tenure`. Al comparar dos distribuciones idénticas, la distancia estadística da cero exacto. Si esta columna marcara drift, sería señal de que algo está mal en el análisis — datos mal alineados, muestras de tamaños incomparables o un test mal elegido — y **no** de que el mundo cambió. Por eso funciona como grupo de control: valida que la herramienta mide lo que decimos que mide.
+- **P2:** Para `MonthlyCharges` (+80%): inflación, un aumento de tarifas de la empresa, un cambio de mix comercial hacia planes más caros, o una devaluación si los precios están dolarizados. Para `tenure` (-70%): una campaña de captación masiva que llenó la base de clientes recién ingresados, la apertura de un mercado nuevo, o una fusión que incorporó de golpe la cartera de otra empresa. Lo importante es que en los tres casos **el modelo no se rompió**: sigue haciendo exactamente lo que aprendió, pero está recibiendo un tipo de cliente que casi no vio durante el entrenamiento, así que sus predicciones dejan de ser confiables.
+- **P3:** **No lo detectaría.** Este script mide únicamente **Data Drift**, es decir cambios en la distribución de las entradas (X). Lo que describe el escenario es **Concept Drift**: cambió la *relación* entre las entradas y el resultado (X → Y) — el mismo perfil de cliente que antes se quedaba, ahora se va. Para detectarlo hay que medir la **performance real del modelo** (accuracy, F1) contra el resultado verdadero a medida que se conoce, lo que exige esperar el *ground truth*: saber quién efectivamente canceló. Ése es el motivo por el que el concept drift se detecta siempre más tarde que el data drift, y por el que en producción se monitorean **las dos cosas en paralelo**.
+
+</details>
 
 ---
 
-## 🚀 Conexión con Kubernetes (Opción de Producción)
+## 🎯 Cierre Integrador
 
-¿Cómo pasamos del `docker run` local a un cluster en producción?  
-En Kubernetes no ejecutamos contenedores aislados, sino **Deployments** de Pods con balanceo de carga.
+- **P1:** Ya recorriste las 5 etapas por separado. Ahora pensá el ciclo completo: cuando el monitoreo de la Etapa 4 detecta drift en producción, **¿qué etapas de esta práctica se vuelven a ejecutar automáticamente y cuáles no?** ¿Qué pieza de todo lo que construiste es la que hace posible que ese re-entrenamiento sea confiable y no un salto al vacío?
 
-Ejemplo de manifiesto `k8s-deployment.yaml`:
+<details>
+<summary>Ver respuesta orientativa</summary>
 
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: churn-api-deployment
-spec:
-  replicas: 2  # 👈 Replicas para Alta Disponibilidad y escalado
-  selector:
-    matchLabels:
-      app: churn-api
-  template:
-    metadata:
-      labels:
-        app: churn-api
-    spec:
-      containers:
-      - name: churn-api
-        image: churn-api:v1
-        ports:
-        - containerPort: 8000
-        env:
-        - name: MLFLOW_TRACKING_URI
-          value: "http://mlflow-server:5000"
-        readinessProbe: # 👈 Utiliza el endpoint /health que programamos en app.py
-          httpGet:
-            path: /health
-            port: 8000
-          initialDelaySeconds: 5
-          periodSeconds: 10
-```
+La alerta de drift dispara lo que en teoría llamamos **Continuous Training (CT)**, y el ciclo que se re-ejecuta es:
 
----
+1. **Etapa 1 (datos)** — se toma el dataset actualizado y se versiona con DVC: ahora la referencia incluye los datos nuevos que causaron el drift.
+2. **Etapa 2 (entrenamiento)** — corre `train.py`, y MLflow registra un **Run nuevo** y una **versión nueva** de `ChurnModel` (la 2, la 3...). Las versiones anteriores **no se pisan**: quedan en el Registry para poder comparar y volver atrás.
+3. **Etapa 3 (servido)** — sólo si el modelo nuevo **supera** las métricas del que está en producción se lo promueve; y aun así no se lo expone de golpe, sino con *shadow testing* o *canary*.
 
-## 📌 Concepto Clave: Feature Store
+Lo que **no** se re-ejecuta automáticamente es la Etapa 0: la infraestructura (MLflow, Docker, el venv) ya está levantada y es justamente lo que permite que todo lo demás sea repetible.
 
-En arquitecturas MLOps empresariales complejas, se suele incorporar un **Feature Store** (ej. *Feast* o *Hopsworks*):
+Y la pieza clave que hace confiable al re-entrenamiento es el **versionado combinado de datos (DVC) + código (Git) + modelos (MLflow Registry)**. Sin eso, "re-entrenar" sería generar un modelo nuevo sin poder demostrar que es mejor, sin poder auditar de dónde salió y sin poder volver al anterior si empeora. Con eso, cada iteración del ciclo es un cambio trazable y reversible — que es, en una frase, de qué se trata MLOps.
 
-```mermaid
-graph TD
-    Sources["Fuentes de Datos (SQL / Logs / S3)"] --> FS["Feature Store (Feast)"]
-    FS -->|"Offline Store (Parquet/S3)"| Train["Entrenamiento Batch"]
-    FS -->|"Online Store (Redis/Low Latency)"| API["Servido Real-Time (FastAPI)"]
-
-    style Sources fill:#1e293b,stroke:#38bdf8,stroke-width:1px,color:#fff
-    style FS fill:#1e293b,stroke:#c084fc,stroke-width:2px,color:#fff
-    style Train fill:#1e293b,stroke:#818cf8,stroke-width:1px,color:#fff
-    style API fill:#1e293b,stroke:#34d399,stroke-width:1px,color:#fff
-```
+</details>
 
 ---
 

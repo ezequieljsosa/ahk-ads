@@ -188,6 +188,41 @@ function renderPracticaHTML(title, contentMarkdown) {
       justify-content: center;
     }
     a { color: var(--accent); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.92rem;
+    }
+    th, td {
+      border: 1px solid var(--card-border);
+      padding: 0.6rem 0.8rem;
+      text-align: left;
+    }
+    th {
+      background: rgba(56, 189, 248, 0.08);
+      color: #38bdf8;
+      font-weight: 600;
+    }
+    tr:nth-child(even) td { background: rgba(255, 255, 255, 0.02); }
+    details {
+      background: rgba(56, 189, 248, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 0.75rem 1.25rem;
+      margin: 1.25rem 0;
+    }
+    details summary {
+      cursor: pointer;
+      color: var(--accent);
+      font-weight: 600;
+      list-style: none;
+      user-select: none;
+    }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::before { content: '▸ '; }
+    details[open] summary::before { content: '▾ '; }
+    details[open] summary { margin-bottom: 0.75rem; }
   </style>
 </head>
 <body>
