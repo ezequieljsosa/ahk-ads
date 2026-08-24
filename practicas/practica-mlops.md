@@ -70,6 +70,7 @@ pandas==2.2.1
 scikit-learn==1.4.1post1
 mlflow==2.11.3
 dvc==3.48.0
+pathspec==0.11.2  # dvc 3.48.0 no soporta pathspec>=1.0 (rompe "dvc init")
 fastapi==0.110.0
 uvicorn==0.28.0
 requests==2.31.0
@@ -127,10 +128,6 @@ Levanta el servicio:
 docker compose up -d
 ```
 > 📌 **Verificación**: Ingresa a tu navegador en `http://localhost:5000` para confirmar que la interfaz de MLflow está lista.
-
-### ❓ Preguntas de Chequeo — Etapa 0
-- **P1:** ¿Qué sucede si inicias el servidor de MLflow sin la bandera `--serve-artifacts` cuando intentas descargar un modelo desde otro contenedor Docker?
-- **P2:** ¿Por qué fijamos las versiones exactas (`==`) en `requirements.txt` en lugar de instalar las últimas versiones?
 
 ---
 
