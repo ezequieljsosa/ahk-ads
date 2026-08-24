@@ -47,7 +47,7 @@ Antes de comenzar la ejecución de comandos, revisemos el rol que cumple cada te
 ## 🛠️ Requisitos Previos
 
 Asegúrate de contar con las siguientes herramientas en tu sistema:
-- **Python 3.9+** y `pip`
+- **Python 3.9+**, `pip` y el módulo `venv` (en Ubuntu/Debian, si `python3 -m venv` falla, instalalo con `sudo apt install python3-venv`)
 - **Docker** y **Docker Compose**
 - **Git**
 
@@ -78,12 +78,21 @@ pydantic>=2.6.4
 setuptools<70.0.0
 ```
 
-3. Instala las dependencias en tu entorno Python:
+3. Crea y activa un **entorno virtual (venv)** exclusivo para esta práctica. Esto evita conflictos con paquetes ya instalados en tu sistema (o el error `externally-managed-environment` en distribuciones Linux recientes):
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+> [!IMPORTANT]
+> **Recordá activar el venv en cada terminal nueva**: si cerrás la terminal o abrís una nueva pestaña, debés volver a ejecutar `source venv/bin/activate` (desde `$HOME/practica-mlops`) antes de correr cualquier comando `python`, `pip` o `dvc` de esta guía. Si ves `(venv)` al inicio de tu prompt, está activo.
+> En Windows (PowerShell), el comando de activación es `venv\Scripts\Activate.ps1`.
+
+4. Instala las dependencias dentro del venv activado:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Levanta el servidor de **MLflow** en un contenedor Docker utilizando `docker-compose.yml`:
+5. Levanta el servidor de **MLflow** en un contenedor Docker utilizando `docker-compose.yml`:
 
 Crea el archivo `docker-compose.yml`:
 ```yaml
@@ -530,4 +539,5 @@ Cuando finalices la práctica, puedes detener y eliminar los servicios ejecutand
 ```bash
 docker stop churn_api_service && docker rm churn_api_service
 docker compose down
+deactivate
 ```

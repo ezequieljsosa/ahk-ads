@@ -34,7 +34,7 @@ graph LR
 <div class="grid grid-cols-4 gap-2 text-xs text-center mt-2">
 <div class="gamma-card p-2">
 <span class="font-bold text-sky-400 block text-xs mb-1">Data &amp; Versioning</span>
-<p class="text-slate-400 text-30px font-mono text-[10px]">DVC, Feast, MinIO, S3</p>
+<p class="text-slate-400 font-mono text-[10px]">DVC, Feast, MinIO, S3</p>
 </div>
 <div class="gamma-card p-2">
 <span class="font-bold text-purple-400 block text-xs mb-1">Orquestación</span>

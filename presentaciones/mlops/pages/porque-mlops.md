@@ -42,6 +42,8 @@ Es la combinación de <strong>Machine Learning + DevOps + Data Engineering</stro
 
 <div class="gamma-card p-3 bg-slate-800/50 border border-slate-700/50">
 <p class="text-xs text-slate-300 text-center">
-💡 <em>Estudios de la industria indican que más del 80% de los proyectos de ML nunca llegan a desplegarse exitosamente en producción sin prácticas de MLOps.</em>
+💡 <em>Según Gartner (2024), en promedio solo el 48% de los proyectos de IA llega a producción, y el proceso demora unos 8 meses desde el prototipo.</em>
+<br>
+<a href="https://www.gartner.com/en/newsroom/press-releases/2024-05-07-gartner-survey-finds-generative-ai-is-now-the-most-frequently-deployed-ai-solution-in-organizations" target="_blank" class="text-slate-500 hover:text-slate-300 underline">Fuente: Gartner Newsroom, mayo 2024</a>
 </p>
 </div>

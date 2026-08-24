@@ -25,6 +25,10 @@ src: ./pages/ciclo-vida-ml.md
 ---
 
 ---
+src: ./pages/feature-store-data-validation.md
+---
+
+---
 src: ./pages/data-drift-concept-drift.md
 ---
 
@@ -42,6 +46,10 @@ src: ./pages/pipeline-entrenamiento-ci-cd-ct.md
 
 ---
 src: ./pages/despliegue-servido-modelos.md
+---
+
+---
+src: ./pages/estrategias-despliegue.md
 ---
 
 ---

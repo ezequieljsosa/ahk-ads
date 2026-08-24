@@ -23,6 +23,9 @@ Predicciones pre-calculadas en masa de forma programada.
 <li>• <strong>Ventajas:</strong> Alto rendimiento masivo, no requiere baja latencia online.</li>
 <li>• <strong>Herramientas:</strong> Apache Spark, Ray, scripts programados (Cron/Airflow).</li>
 </ul>
+<div class="text-[11px] text-slate-400 bg-slate-800/40 rounded p-2 mt-2 border-l-2 border-teal-400/60">
+💡 <strong>Ejemplo:</strong> scoring de riesgo crediticio recalculado cada noche para toda la cartera. Se usa <strong>batch</strong> y no real-time porque la decisión no se necesita al instante (se consume recién al día siguiente) y procesar millones de registros juntos es mucho más eficiente que invocar el modelo cliente por cliente.
+</div>
 </div>
 
 <div class="gamma-card p-4">
@@ -37,13 +40,8 @@ El modelo responde mediante una API REST/gRPC en tiempo real (milisegundos).
 <li>• <strong>Ventajas:</strong> Respuesta inmediata a datos frescos del usuario.</li>
 <li>• <strong>Herramientas:</strong> FastAPI + Docker, KServe, Triton, TorchServe.</li>
 </ul>
+<div class="text-[11px] text-slate-400 bg-slate-800/40 rounded p-2 mt-2 border-l-2 border-cyan-400/60">
+💡 <strong>Ejemplo:</strong> aprobar o rechazar una transacción al pasar la tarjeta. Se usa <strong>real-time</strong> y no batch porque la decisión requiere los datos del evento recién ocurrido — un cálculo nocturno llegaría cuando el fraude ya se concretó.
 </div>
-</div>
-
-<div class="gamma-card p-3 mt-4">
-<h4 class="text-xs font-semibold text-slate-200 mb-1">Estrategias de Despliegue Seguro:</h4>
-<div class="grid grid-cols-2 gap-2 text-xs text-slate-400">
-<div><strong>Canary Deployment:</strong> Enviar 5% del tráfico al nuevo modelo y evaluar errores antes del 100%.</div>
-<div><strong>Shadow Deployment (A/B Test):</strong> Correr el nuevo modelo en paralelo sin impactar la respuesta al cliente.</div>
 </div>
 </div>
