@@ -47,7 +47,7 @@ Antes de comenzar la ejecución de comandos, revisemos el rol que cumple cada te
 ## 🛠️ Requisitos Previos
 
 Asegúrate de contar con las siguientes herramientas en tu sistema:
-- **Python 3.9+**, `pip` y el módulo `venv` (en Ubuntu/Debian, si `python3 -m venv` falla, instalalo con `sudo apt install python3-venv`)
+- **Python 3.12** (recomendado) y `pip` — en WSL/Ubuntu, si no lo tenés instalado, la Etapa 0 te indica cómo instalarlo
 - **Docker** y **Docker Compose**
 - **Git**
 
@@ -78,14 +78,24 @@ pydantic>=2.6.4
 setuptools<70.0.0
 ```
 
-3. Crea y activa un **entorno virtual (venv)** exclusivo para esta práctica. Esto evita conflictos con paquetes ya instalados en tu sistema (o el error `externally-managed-environment` en distribuciones Linux recientes):
+3. Crea y activa un **entorno virtual (venv) con Python 3.12** exclusivo para esta práctica. Esto evita conflictos con paquetes ya instalados en tu sistema (o el error `externally-managed-environment` en distribuciones Linux recientes):
 ```bash
-python3 -m venv venv
+python3.12 -m venv venv
 source venv/bin/activate
 ```
+> [!NOTE]
+> **¿Por qué `python3.12` y no `python3` a secas?** Las versiones de `requirements.txt` están fijadas desde 2024 (`pandas==2.2.1`, `scikit-learn==1.4.1post1`, etc.) para garantizar reproducibilidad. Si tu `python3` default apunta a una versión más nueva (3.13, 3.14...), `pip` no encuentra un paquete precompilado (*wheel*) para esas versiones viejas y trata de compilarlas desde código fuente — ahí es donde suelen aparecer errores largos de `meson`/`pkg-config` al instalar `pandas`. Python 3.12 sí tiene wheels para todas las dependencias de esta guía.
+
+> [!WARNING]
+> **Error `The virtual environment was not created successfully because ensurepip is not available`** (típico en WSL/Ubuntu recién instalado): falta el paquete `python3.12-venv`. Como en WSL sos administrador de tu propia distro, resolvelo con:
+> ```bash
+> sudo apt update
+> sudo apt install -y python3.12 python3.12-venv
+> ```
+> Después volvé a ejecutar `python3.12 -m venv venv` y `source venv/bin/activate`.
+
 > [!IMPORTANT]
 > **Recordá activar el venv en cada terminal nueva**: si cerrás la terminal o abrís una nueva pestaña, debés volver a ejecutar `source venv/bin/activate` (desde `$HOME/practica-mlops`) antes de correr cualquier comando `python`, `pip` o `dvc` de esta guía. Si ves `(venv)` al inicio de tu prompt, está activo.
-> En Windows (PowerShell), el comando de activación es `venv\Scripts\Activate.ps1`.
 
 4. Instala las dependencias dentro del venv activado:
 ```bash
