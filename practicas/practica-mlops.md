@@ -117,11 +117,18 @@ services:
       - "5000:5000"
     volumes:
       - mlflow_db:/mlflow
-    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:////mlflow/mlflow.db --default-artifact-root /mlflow/artifacts --serve-artifacts
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:////mlflow/mlflow.db --artifacts-destination /mlflow/artifacts --serve-artifacts
 
 volumes:
   mlflow_db:
 ```
+
+> [!IMPORTANT]
+> **¿Por qué `--artifacts-destination` y no `--default-artifact-root`?** Es la diferencia entre que el laboratorio funcione o no, y vale la pena entenderla:
+> - `--default-artifact-root <ruta>` le comunica al **cliente** (tu `train.py`) una ruta de disco, y el cliente escribe los artefactos **él mismo, en esa ruta de su propia máquina** — es decir en `/mlflow/artifacts` de tu WSL, no dentro del contenedor. En un WSL recién instalado eso falla con *permission denied*, porque crear `/mlflow` en la raíz del sistema requiere `sudo`.
+> - `--artifacts-destination <ruta>` indica dónde guarda los archivos **el servidor**, y hace que el artifact root que reciben los clientes sea `mlflow-artifacts:/`. Con eso, `train.py` **sube** los artefactos por HTTP al servidor, que los escribe dentro del volumen del contenedor. Es lo que hace que la bandera `--serve-artifacts` sirva para algo.
+>
+> La consecuencia práctica: con esta configuración el modelo viaja siempre por HTTP, así que **cualquier** cliente (tu script, la API en otro contenedor, un pod en Kubernetes) puede descargarlo sin compartir carpetas ni permisos con el servidor.
 
 Levanta el servicio:
 ```bash
@@ -391,11 +398,13 @@ docker build -t churn-api:v1 .
 
 docker run -d --name churn_api_service \
   -p 8000:8000 \
-  -v /mlflow:/mlflow \
   -e MLFLOW_TRACKING_URI="http://host.docker.internal:5000" \
   --add-host=host.docker.internal:host-gateway \
   churn-api:v1
 ```
+
+> [!NOTE]
+> Fijate que este contenedor **no monta ningún volumen**: no comparte carpetas con el servidor de MLflow ni con tu máquina. Gracias a `--serve-artifacts` (Etapa 0), el Pipeline se descarga íntegramente por HTTP desde el Registry. Esto es lo que permite que mañana esta misma imagen corra en un servidor remoto o en un pod de Kubernetes sin cambiarle una línea.
 
 4. **Prueba de Inferencia con `curl`** (enviando cadenas reales del cliente):
 
@@ -444,7 +453,7 @@ curl -X 'POST' \
 <summary>Ver respuestas orientativas</summary>
 
 - **P1:** Con una versión fija hay que **cambiar el código (o la variable de entorno `MODEL_URI`) y redesplegar** el contenedor — es explícito y predecible, pero lento. Apuntar a `models:/ChurnModel/Production` haría que la API tome automáticamente el modelo que esté promovido a ese stage en el Registry, sin tocar código; el riesgo es que **cualquiera que promueva un modelo en MLflow cambia producción al instante**, sin revisión, sin PR y sin posibilidad de rollback controlado. En un entorno serio ese cambio no se hace de golpe sino con las estrategias que vimos en teoría: *shadow testing* primero (el modelo nuevo recibe tráfico real pero su respuesta no se devuelve a nadie) y después *canary* (un 5% del tráfico real), monitoreando antes de escalar al 100%.
-- **P2:** En orden de probabilidad: **(1)** la API no llega al servidor MLflow — mal `MLFLOW_TRACKING_URI`, contenedor sin `host.docker.internal`, o MLflow caído; **(2)** el modelo `ChurnModel` versión 1 no existe todavía en el Registry, porque `train.py` nunca se corrió exitosamente; **(3)** MLflow responde pero no puede entregar el artefacto binario (falta `--serve-artifacts`, o el volumen de artefactos no es accesible desde el contenedor de la API). El primer lugar donde mirar siempre es `docker logs churn_api_service`, porque `app.py` imprime el error exacto al fallar la carga.
+- **P2:** En orden de probabilidad: **(1)** la API no llega al servidor MLflow — mal `MLFLOW_TRACKING_URI`, contenedor sin `host.docker.internal`, o MLflow caído; **(2)** el modelo `ChurnModel` versión 1 no existe todavía en el Registry, porque `train.py` nunca se corrió exitosamente; **(3)** MLflow responde pero no puede entregar el artefacto binario — típicamente porque el servidor se levantó sin `--serve-artifacts` o con `--default-artifact-root` en vez de `--artifacts-destination`, y entonces los archivos del modelo no están donde el servidor los busca. El primer lugar donde mirar siempre es `docker logs churn_api_service`, porque `app.py` imprime el error exacto al fallar la carga.
 
 </details>
 
