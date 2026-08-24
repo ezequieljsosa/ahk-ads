@@ -267,7 +267,7 @@ python train.py
 > 3. Entra al menú **Models** arriba a la izquierda y verás el modelo registrado `ChurnModel` en versión 1.
 
 ### ❓ Preguntas de Chequeo — Etapa 2
-- **P1:** ¿Cuál es la ventaja pedagógica y técnica de registrar un `Pipeline` completo en MLflow en lugar de registrar únicamente el objeto `RandomForestClassifier` entrenado?
+- **P1:** ¿Qué problema evitás al registrar en MLflow el `Pipeline` completo (transformaciones + modelo) en lugar de registrar únicamente el objeto `RandomForestClassifier` entrenado? Pensalo en términos de qué datos recibe `app.py` en el endpoint `/predict`.
 - **P2:** Si cambias `n_estimators=200` y vuelves a correr `python train.py`, ¿qué ocurre en la interfaz de MLflow con los Runs y en el Model Registry con las versiones?
 
 ---
@@ -408,12 +408,12 @@ curl -X 'POST' \
 }'
 ```
 
-*Respuesta esperada:*
+*Respuesta esperada* (verificado con las versiones pineadas de `requirements.txt`; si te da un `churn_probability` levemente distinto por diferencias de plataforma no es un error, pero `churn_prediction` y `status` deberían coincidir):
 ```json
 {
-  "churn_prediction": 1,
-  "churn_probability": 0.6421,
-  "status": "Will Churn"
+  "churn_prediction": 0,
+  "churn_probability": 0.4926,
+  "status": "Will Stay"
 }
 ```
 
@@ -476,7 +476,7 @@ python monitor_drift.py
 > Y luego ingresa desde tu navegador a `http://localhost:8080/drift_report.html`.
 
 ### ❓ Preguntas de Chequeo — Etapa 4
-- **P1:** ¿Cuál es la diferencia entre **Data Drift** (variación en las entradas $X$) y **Concept Drift** (variación en la relación $X \rightarrow Y$)?
+- **P1:** ¿Cuál es la diferencia entre **Data Drift** (variación en las entradas X) y **Concept Drift** (variación en la relación X → Y)?
 - **P2:** En un entorno productivo automatizado, ¿qué acción debería desencadenar una alerta positiva de Data Drift?
 
 ---
