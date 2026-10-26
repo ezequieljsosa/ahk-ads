@@ -1,0 +1,180 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Slidev layouts custom styling */
+:root {
+  --slidev-theme-background: radial-gradient(circle at 10% 20%, #0f172a 0%, #05070f 100%);
+  --slidev-theme-text: #f8fafc;
+}
+
+p, li, span, code, blockquote, h1, h2, h3, h4 {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+.slidev-page, .slidev-layout {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: radial-gradient(circle at 10% 20%, #0f172a 0%, #05070f 100%) !important;
+  color: #f8fafc !important;
+}
+
+/* Headings with Outfit font */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff !important;
+}
+
+h1 {
+  font-size: 2.25rem !important;
+  line-height: 2.5rem !important;
+}
+
+h2 {
+  font-size: 1.75rem !important;
+  line-height: 2rem !important;
+}
+
+/* Custom background for specific slides if needed */
+.slidev-layout.cover {
+  background: radial-gradient(circle at 80% 20%, #1e1b4b 0%, #030712 100%) !important;
+}
+
+/* Glassmorphic Card Styling - Signature Gamma look */
+.gamma-card {
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5) !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.gamma-card:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.6), 0 0 15px 0 rgba(99, 102, 241, 0.1) !important;
+}
+
+/* Custom Badge */
+.gamma-badge {
+  padding: 0.15rem 0.5rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Color codes for badges & glow */
+.badge-presentation {
+  background: rgba(168, 85, 247, 0.15) !important;
+  color: #c084fc !important;
+  border-color: rgba(168, 85, 247, 0.3) !important;
+}
+.badge-data {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #60a5fa !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+.badge-concurrency {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+.badge-domain {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+.badge-integration {
+  background: rgba(6, 182, 212, 0.15) !important;
+  color: #22d3ee !important;
+  border-color: rgba(6, 182, 212, 0.3) !important;
+}
+.badge-transversal {
+  background: rgba(244, 63, 94, 0.15) !important;
+  color: #fb7185 !important;
+  border-color: rgba(244, 63, 94, 0.3) !important;
+}
+
+/* Custom Animations */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+.glow-bg {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  filter: blur(80px);
+  z-index: -1;
+  pointer-events: none;
+  animation: pulse-glow 8s infinite alternate;
+}
+
+/* Fowler layout list numbering */
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  color: #818cf8;
+  font-weight: 700;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+/* Custom styles for Mermaid diagrams to act as cards and scale properly without HTML wrappers */
+.slidev-page .mermaid {
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 1rem !important;
+  padding: 1.5rem !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5) !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.zoom-diagram-17 .mermaid {
+  zoom: 1.75 !important;
+}
+
+.zoom-diagram-16 .mermaid {
+  zoom: 1.6 !important;
+}
+
+.zoom-diagram-175 .mermaid {
+  zoom: 1.4 !important;
+}
+
+.compact-slide {
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+.compact-slide h2 {
+  margin-bottom: 0.5rem !important;
+}
+.compact-slide p {
+  margin-bottom: 0.5rem !important;
+}
+.compact-slide .mermaid {
+  zoom: 0.65 !important;
+}
+
