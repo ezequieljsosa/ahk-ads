@@ -1,4 +1,4 @@
-<div v-pre class="h-full flex flex-col justify-between">
+<div class="h-full flex flex-col justify-between">
 <div class="flex justify-between items-center mb-2">
 <h2>¿Para Qué Usar Ansible en un Pipeline CI/CD?</h2>
 <span class="gamma-badge badge-domain">Integración</span>
@@ -23,9 +23,9 @@
 </div>
 </div>
 
-<div class="gamma-card p-3">
-<h3 class="text-sm font-bold text-cyan-300 mb-1">Caso de uso: cambiar la configuración de nginx en producción</h3>
-<p class="text-xs text-slate-300">Se edita la plantilla en una rama y se abre el Pull Request. El pipeline simula el cambio y muestra el diff en el PR. Tras aprobarlo y hacer merge, se aplica solo en <code>vm1</code> y <code>vm2</code>.</p>
+<div class="gamma-card p-3 text-xs text-slate-300">
+<strong class="text-cyan-300">Caso de uso: cambiar la configuración de nginx en producción.</strong>
+Se edita la plantilla en una rama y se abre el Pull Request. El pipeline simula el cambio y muestra el diff en el PR. Tras aprobarlo y hacer merge, se aplica solo en <code>vm1</code> y <code>vm2</code>.
 </div>
 
 ```mermaid
