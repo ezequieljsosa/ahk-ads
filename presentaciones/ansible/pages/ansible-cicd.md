@@ -22,6 +22,11 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">runs-on:</span> self-hosted<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">steps:</span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;- <span class="text-purple-400">uses:</span> actions/checkout@v4<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="text-purple-400">run:</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mkdir -p ~/.ssh<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;echo "${{ secrets.VAULT_PASS }}" &gt; .vault_pass<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;echo "${{ secrets.SSH_KEY }}" &gt; ~/.ssh/id_ed25519<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;chmod 600 ~/.ssh/id_ed25519<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;- <span class="text-purple-400">run:</span> ansible-playbook site.yml<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">env:</span> { ANSIBLE_VAULT_PASSWORD_FILE: .vault_pass }
 </div>
@@ -31,7 +36,7 @@
 <li><strong>desplegar:</strong> solo en <code>main</code> y solo si <code>validar</code> pasó.</li>
 <li><strong>environment:</strong> permite exigir aprobación manual antes de tocar producción.</li>
 <li><strong>self-hosted runner:</strong> el runner de GitHub no llega a servidores en una red privada; uno propio dentro de la red sí.</li>
-<li><strong>Secretos:</strong> la clave SSH y la contraseña del Vault se guardan como secrets del repositorio, nunca en el código.</li>
+<li><strong>Secretos:</strong> la clave SSH y la contraseña del Vault se guardan como secrets del repositorio (<code>SSH_KEY</code>, <code>VAULT_PASS</code>) y el job los escribe en archivos temporales; nunca van en el código.</li>
 </ul>
 </div>
 </div>

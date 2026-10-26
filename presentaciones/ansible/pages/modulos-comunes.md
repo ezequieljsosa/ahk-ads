@@ -18,8 +18,8 @@
 <p class="text-xs text-slate-300">Copia archivos o los genera desde plantillas.</p>
 </div>
 <div class="gamma-card p-3">
-<h3 class="text-sm font-bold text-amber-300 mb-1">👤 user / authorized_key</h3>
-<p class="text-xs text-slate-300">Gestiona usuarios y claves SSH.</p>
+<h3 class="text-sm font-bold text-amber-300 mb-1">👤 user / file</h3>
+<p class="text-xs text-slate-300">Gestiona usuarios, carpetas y permisos.</p>
 </div>
 <div class="gamma-card p-3">
 <h3 class="text-sm font-bold text-pink-300 mb-1">📝 lineinfile</h3>

@@ -16,11 +16,13 @@ Tanto las filminas teóricas como las guías de laboratorio están disponibles y
 
 - 🚀 **[Introducción a DevOps](https://ezequieljsosa.github.io/ahk-ads/devops/)** — Cultura, CI/CD Pipelines, GitHub Actions e Infraestructura como Código.
 - 🤖 **[Introducción a MLOps](https://ezequieljsosa.github.io/ahk-ads/mlops/)** — Ciclo de Vida de ML, Data Drift, Experiment Tracking (MLflow) y Servido de Modelos.
+- ⚙️ **[Introducción a Ansible](https://ezequieljsosa.github.io/ahk-ads/ansible/)** — Gestión de configuración, inventario, playbooks, roles, Vault e integración con CI/CD.
 
 ---
 
 ## 🛠️ Guías Prácticas (`practicas/`)
 
+- 🛠️ **[Práctica de Ansible](https://ezequieljsosa.github.io/ahk-ads/practicas/practica-ansible.html)** — Administración de servidores con Ansible desde WSL o un contenedor: inventario, módulos ad-hoc y playbooks. (`practicas/practica-ansible.md`)
 - 🤖 **[Práctica de MLOps](https://ezequieljsosa.github.io/ahk-ads/practicas/practica-mlops.html)** — DVC, MLflow Server, FastAPI en Docker y Monitoreo de Data Drift con Evidently AI. (`practicas/practica-mlops.md`)
 - ☸️ **[Práctica de Kubernetes (k3d)](https://ezequieljsosa.github.io/ahk-ads/practicas/practica-k3d.html)** — Creación de clústeres locales ligeros con k3d, Deployments y Services. (`practicas/practica-k3d.md`)
 - ⚡ **[Práctica de HPC](https://ezequieljsosa.github.io/ahk-ads/practicas/practica-hpc.html)** — Slurm Workload Manager, ejecución de Jobs paralelos y entrenamiento. (`practicas/practica-hpc.md`)
